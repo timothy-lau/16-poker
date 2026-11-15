@@ -206,6 +206,81 @@ h1 {
   box-shadow: 0 4px 14px rgba(231,197,101,.28);
 }
 .diff-btn.selected span { opacity: .8; }
+.diff-btn { min-height: 52px; }
+
+/* Custom memorise-time control */
+.time-custom {
+  display: none;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 12px;
+  padding: 12px 12px 10px;
+  border: 1px solid rgba(231,197,101,.25);
+  border-radius: 14px;
+  background: rgba(8,28,20,.55);
+}
+.time-custom.show { display: block; }
+.time-value {
+  font-family: var(--serif);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--gold-2);
+  margin-bottom: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.time-value small { font-size: 16px; color: rgba(244,237,216,.7); margin-left: 2px; }
+.time-row { display: flex; align-items: center; gap: 10px; }
+.step-btn {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(231,197,101,.5);
+  background: rgba(231,197,101,.12);
+  color: var(--gold-2);
+  font-size: 26px;
+  line-height: 1;
+  font-family: var(--sans);
+  cursor: pointer;
+}
+.step-btn:active { transform: scale(.94); background: rgba(231,197,101,.25); }
+.step-btn:disabled { opacity: .35; }
+input.time-slider {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  touch-action: pan-x;
+}
+input.time-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--gold) 0 var(--fill, 50%), rgba(0,0,0,.4) var(--fill, 50%) 100%);
+  border: 1px solid rgba(231,197,101,.3);
+}
+input.time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 30px;
+  height: 30px;
+  margin-top: -12px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f8e7a8, #c9a227);
+  border: 2px solid #6b4f12;
+  box-shadow: 0 2px 6px rgba(0,0,0,.5);
+}
+input.time-slider::-moz-range-track { height: 8px; border-radius: 99px; background: rgba(0,0,0,.4); }
+input.time-slider::-moz-range-progress { height: 8px; border-radius: 99px; background: var(--gold); }
+input.time-slider::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: #e7c565; border: 2px solid #6b4f12; }
+@media (max-height: 700px) {
+  .time-custom { margin-top: 8px; padding: 6px 10px; }
+  .time-value { display: none; }
+  .time-scale { display: none !important; }
+  .step-btn { flex-basis: 44px; width: 44px; height: 44px; }
+  .best-line { margin: 10px 0 12px; }
+}
+.time-scale { display: flex; justify-content: space-between; font-size: 10px; color: rgba(244,237,216,.5); padding: 2px 58px 0; }
 
 .best-line {
   margin: 16px 0 18px;
@@ -650,14 +725,23 @@ html { -webkit-font-smoothing: antialiased; }
     <div class="panel">
       <h2>How to play</h2>
       <ol>
-        <li>16 cards are shown, then flipped face-down after a short countdown.</li>
+        <li>16 cards are shown for the time you choose (10s, 20s, or Custom from 1 to 30s), then flipped face-down.</li>
         <li>The dealer turns 3 more cards face-up.</li>
         <li>From memory, tap 2 of the hidden cards to make the best 5-card poker hand with the dealer’s 3. Tap again to deselect.</li>
-        <li>Every deal hides one best hand and a few tempting near-misses. Best = 100 pts, 2nd = 60, 3rd = 40, 4th = 25, 5th = 15, anything else = 5. Five rounds.</li>
+        <li>Every deal hides one best hand and a few tempting near-misses. Best = 100 pts, 2nd = 60, 3rd = 40, 4th = 25, 5th = 15, anything else = 5. Five rounds. Shorter times also bring closer decoys.</li>
       </ol>
     </div>
-    <div class="diff-label">Difficulty</div>
+    <div class="diff-label">Memorise time</div>
     <div class="diff-row" id="diffRow"></div>
+    <div class="time-custom" id="timeCustom">
+      <div class="time-value"><span id="timeValue">10</span><small>s</small></div>
+      <div class="time-row">
+        <button class="step-btn" id="timeMinus" type="button" aria-label="One second less">−</button>
+        <input class="time-slider" id="timeSlider" type="range" min="1" max="30" step="1" value="10" aria-label="Memorise time in seconds">
+        <button class="step-btn" id="timePlus" type="button" aria-label="One second more">+</button>
+      </div>
+      <div class="time-scale"><span>1s</span><span>30s</span></div>
+    </div>
     <div class="best-line" id="bestLine">Best: —</div>
     <button class="btn" id="playBtn" type="button">Deal</button>
   </section>
@@ -700,7 +784,7 @@ html { -webkit-font-smoothing: antialiased; }
     <div class="summary-list" id="summaryList"></div>
     <div class="best-line" id="summaryBest">Best: —</div>
     <button class="btn" id="againBtn" type="button">Play again</button>
-    <button class="btn secondary" id="homeBtn" type="button">Change difficulty</button>
+    <button class="btn secondary" id="homeBtn" type="button">Change time</button>
   </section>
 </div>
 <div id="rotate">Please rotate your phone to portrait</div>
@@ -1331,16 +1415,19 @@ html { -webkit-font-smoothing: antialiased; }
   "use strict";
   var P = window.PokerEval;
   var G = window.RoundGen;
-  var DIFF = {
-    easy: { id: "easy", label: "Easy", seconds: 10 },
-    medium: { id: "medium", label: "Medium", seconds: 6 },
-    hard: { id: "hard", label: "Hard", seconds: 3 }
-  };
-  var STORAGE_KEY = "sixteenPokerBestV2"; // v2: place-based scoring (max 500)
+  var PRESETS = [10, 20];
+  var MIN_SECONDS = 1;
+  var MAX_SECONDS = 30;
+  var STORAGE_KEY = "sixteenPokerBestV3"; // one overall best: { score, seconds }
+  var OLD_BEST_KEY = "sixteenPokerBestV2"; // per-difficulty bests from the previous version
+  var TIME_KEY = "sixteenPokerTimeV1";    // last chosen time: { mode, seconds }
   var ROUNDS = 5;
   var TOTAL_FLIP_MS = 55 * 16 + 550;
 
-  var difficulty = "medium";
+  var timeMode = "10";   // "10" | "20" | "custom"
+  var seconds = 10;
+  var gameSeconds = 10;  // time used for the game in progress
+  var difficulty = "easy";
   var round = 0;
   var score = 0;
   var gridCards = [];
@@ -1358,6 +1445,11 @@ html { -webkit-font-smoothing: antialiased; }
     play: document.getElementById("play"),
     summary: document.getElementById("summary"),
     diffRow: document.getElementById("diffRow"),
+    timeCustom: document.getElementById("timeCustom"),
+    timeValue: document.getElementById("timeValue"),
+    timeSlider: document.getElementById("timeSlider"),
+    timeMinus: document.getElementById("timeMinus"),
+    timePlus: document.getElementById("timePlus"),
     bestLine: document.getElementById("bestLine"),
     playBtn: document.getElementById("playBtn"),
     roundChip: document.getElementById("roundChip"),
@@ -1383,26 +1475,56 @@ html { -webkit-font-smoothing: antialiased; }
     homeBtn: document.getElementById("homeBtn")
   };
 
-  function loadBests() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { easy: 0, medium: 0, hard: 0 };
-      var o = JSON.parse(raw);
-      return {
-        easy: Number(o.easy) || 0,
-        medium: Number(o.medium) || 0,
-        hard: Number(o.hard) || 0
-      };
-    } catch (e) {
-      return { easy: 0, medium: 0, hard: 0 };
-    }
+  /** Decoy closeness follows the memorise time: <=5s close decoys, 6-12s medium, >12s easy. */
+  function decoyLevel(sec) {
+    return sec <= 5 ? "hard" : sec <= 12 ? "medium" : "easy";
   }
 
-  function saveBest(diff, value) {
-    var b = loadBests();
-    if (value > (b[diff] || 0)) {
-      b[diff] = value;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(b));
+  function clampSeconds(v) {
+    v = Math.round(Number(v));
+    if (!isFinite(v)) return 10;
+    return Math.max(MIN_SECONDS, Math.min(MAX_SECONDS, v));
+  }
+
+  function loadTime() {
+    try {
+      var o = JSON.parse(localStorage.getItem(TIME_KEY) || "null");
+      if (o) {
+        seconds = clampSeconds(o.seconds);
+        timeMode = o.mode === "custom" || PRESETS.indexOf(seconds) === -1 ? "custom" : String(seconds);
+      }
+    } catch (e) { /* keep defaults */ }
+  }
+
+  function saveTime() {
+    try { localStorage.setItem(TIME_KEY, JSON.stringify({ mode: timeMode, seconds: seconds })); } catch (e) {}
+  }
+
+  function loadBest() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var o = JSON.parse(raw);
+        return { score: Number(o.score) || 0, seconds: clampSeconds(o.seconds) };
+      }
+      // Carry over the top score from the old Easy/Medium/Hard version.
+      var old = JSON.parse(localStorage.getItem(OLD_BEST_KEY) || "null");
+      if (old) {
+        var best = { score: 0, seconds: 10 };
+        [["easy", 10], ["medium", 6], ["hard", 3]].forEach(function (d) {
+          var v = Number(old[d[0]]) || 0;
+          if (v > best.score) best = { score: v, seconds: d[1] };
+        });
+        return best;
+      }
+    } catch (e) { /* fall through */ }
+    return { score: 0, seconds: 10 };
+  }
+
+  function saveBest(value, sec) {
+    var b = loadBest();
+    if (value > b.score) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ score: value, seconds: sec })); } catch (e) {}
       return true;
     }
     return false;
@@ -1414,31 +1536,50 @@ html { -webkit-font-smoothing: antialiased; }
     el.summary.classList.toggle("active", name === "summary");
   }
 
-  function bestText(diff) {
-    var v = loadBests()[diff] || 0;
-    return v ? String(v) : "—";
+  function bestHTML() {
+    var b = loadBest();
+    return b.score
+      ? "Best: <strong>" + b.score + "</strong> <span class=\"best-time\">(" + b.seconds + "s)</span>"
+      : "Best: <strong>—</strong>";
   }
 
   function updateStartBest() {
-    el.bestLine.innerHTML = "Best on " + DIFF[difficulty].label + ": <strong>" + bestText(difficulty) + "</strong>";
+    el.bestLine.innerHTML = bestHTML();
+  }
+
+  function setSeconds(v, mode) {
+    seconds = clampSeconds(v);
+    timeMode = mode || (PRESETS.indexOf(seconds) !== -1 && timeMode !== "custom" ? String(seconds) : "custom");
+    saveTime();
+    renderDiff();
   }
 
   function renderDiff() {
     el.diffRow.innerHTML = "";
-    ["easy", "medium", "hard"].forEach(function (id) {
-      var d = DIFF[id];
+    [["10", "10s"], ["20", "20s"], ["custom", "Custom"]].forEach(function (opt) {
+      var id = opt[0];
       var b = document.createElement("button");
       b.type = "button";
-      b.className = "diff-btn" + (id === difficulty ? " selected" : "");
-      b.innerHTML = "<strong>" + d.label + "</strong><span>" + d.seconds + " seconds</span>";
+      b.className = "diff-btn" + (id === timeMode ? " selected" : "");
+      b.innerHTML = "<strong>" + opt[1] + "</strong>" +
+        (id === "custom" ? "<span>" + (timeMode === "custom" ? seconds + " seconds" : "1–30 seconds") + "</span>" : "<span>seconds</span>");
       b.addEventListener("click", function () {
-        difficulty = id;
-        renderDiff();
-        updateStartBest();
+        if (id === "custom") setSeconds(seconds, "custom");
+        else setSeconds(Number(id), id);
       });
       el.diffRow.appendChild(b);
     });
+    el.timeCustom.classList.toggle("show", timeMode === "custom");
+    el.timeValue.textContent = String(seconds);
+    el.timeSlider.value = String(seconds);
+    el.timeSlider.style.setProperty("--fill", ((seconds - MIN_SECONDS) / (MAX_SECONDS - MIN_SECONDS) * 100) + "%");
+    el.timeMinus.disabled = seconds <= MIN_SECONDS;
+    el.timePlus.disabled = seconds >= MAX_SECONDS;
   }
+
+  el.timeSlider.addEventListener("input", function () { setSeconds(el.timeSlider.value, "custom"); });
+  el.timeMinus.addEventListener("click", function () { setSeconds(seconds - 1, "custom"); });
+  el.timePlus.addEventListener("click", function () { setSeconds(seconds + 1, "custom"); });
 
   function faceHTML(card) {
     var rank = P.RANK_CHARS[card.rank];
@@ -1552,6 +1693,8 @@ html { -webkit-font-smoothing: antialiased; }
     score = 0;
     history = [];
     usedTargets = [];
+    gameSeconds = seconds;
+    difficulty = decoyLevel(gameSeconds);
     el.scoreChip.textContent = "0";
     showScreen("play");
     startRound();
@@ -1583,9 +1726,8 @@ html { -webkit-font-smoothing: antialiased; }
     requestAnimationFrame(sizeGrid);
     setStatus("Memorize the cards");
 
-    var seconds = DIFF[difficulty].seconds;
     var start = performance.now();
-    var duration = seconds * 1000;
+    var duration = gameSeconds * 1000;
 
     function tick(now) {
       var t = Math.min(1, (now - start) / duration);
@@ -1738,9 +1880,9 @@ html { -webkit-font-smoothing: antialiased; }
   function endGame() {
     showScreen("summary");
     el.grandTotal.textContent = String(score);
-    var isNew = saveBest(difficulty, score);
+    var isNew = saveBest(score, gameSeconds);
     el.newBest.classList.toggle("show", isNew);
-    el.summaryBest.innerHTML = "Best on " + DIFF[difficulty].label + ": <strong>" + bestText(difficulty) + "</strong>";
+    el.summaryBest.innerHTML = "This game: " + gameSeconds + "s  ·  " + bestHTML();
     el.summaryList.innerHTML = history.map(function (h) {
       return (
         '<div class="sum-row">' +
@@ -1784,6 +1926,7 @@ html { -webkit-font-smoothing: antialiased; }
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", sizeGrid);
   }
+  loadTime();
   renderDiff();
   updateStartBest();
   sizeGrid();
