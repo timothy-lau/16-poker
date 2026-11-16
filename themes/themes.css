@@ -1,0 +1,353 @@
+/* ════════════════════════════════════════════════════════════════════
+   THEME LAYER  ·  html[data-theme="classic" | "dead-again" | "neon" | "dealer-room"]
+   Original artwork only (CSS + inline SVG). No Netflix images or logo.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Shared: dealer figure + deal animation ─────────────────────────── */
+.dealer-wrap { position: relative; }
+.dealer-figure {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: -4px;
+  width: 74px;
+  height: 96px;
+  pointer-events: none;
+}
+.dealer-figure svg { display: none; width: 100%; height: 100%; overflow: visible; }
+html[data-theme="dead-again"] .dealer-figure,
+html[data-theme="neon"] .dealer-figure,
+html[data-theme="dealer-room"] .dealer-figure { display: block; }
+html[data-theme="dead-again"] .dealer-figure .fig-tux,
+html[data-theme="neon"] .dealer-figure .fig-neon,
+html[data-theme="dealer-room"] .dealer-figure .fig-picto { display: block; }
+.dealer-figure .arm { transform-box: fill-box; transform-origin: 10% 10%; transition: transform .25s ease; }
+.dealer-figure.dealing .arm { animation: dealerArm .45s ease-in-out 3; }
+@keyframes dealerArm { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-16deg); } }
+
+html:not([data-theme="classic"]) .dealer-slot.filled .mini-card { animation: dealIn .42s cubic-bezier(.2,.8,.2,1) both; }
+html:not([data-theme="classic"]) .dealer-slot:nth-child(2) .mini-card { animation-delay: .12s; }
+html:not([data-theme="classic"]) .dealer-slot:nth-child(3) .mini-card { animation-delay: .24s; }
+@keyframes dealIn {
+  from { transform: translate(-120px, 10px) rotate(-24deg) scale(.7); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+html:not([data-theme="classic"]) .grid .card { animation: gridIn .38s ease-out both; }
+@keyframes gridIn { from { opacity: 0; transform: translateY(8px) scale(.94); } to { opacity: 1; transform: none; } }
+html:not([data-theme="classic"]) .grid .card:nth-child(4n+2) { animation-delay: .03s; }
+html:not([data-theme="classic"]) .grid .card:nth-child(4n+3) { animation-delay: .06s; }
+html:not([data-theme="classic"]) .grid .card:nth-child(4n+4) { animation-delay: .09s; }
+html:not([data-theme="classic"]) .grid .card:nth-child(n+5)  { animation-delay: .1s; }
+html:not([data-theme="classic"]) .grid .card:nth-child(n+9)  { animation-delay: .16s; }
+html:not([data-theme="classic"]) .grid .card:nth-child(n+13) { animation-delay: .22s; }
+
+/* Theme picker (start screen) */
+.theme-label { margin-top: 2px; }
+.theme-row { display: flex; gap: 6px; width: 100%; max-width: 400px; margin-bottom: 4px; }
+.theme-btn {
+  flex: 1; min-height: 40px; border-radius: 10px; font-size: 11.5px; letter-spacing: .04em;
+  border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.25); color: inherit; font-family: var(--sans); cursor: pointer;
+}
+.theme-btn.selected { border-color: currentColor; background: rgba(255,255,255,.12); font-weight: 700; }
+
+/* ══════════ THEME 1 · DEAD AGAIN (faithful S3 poster look) ══════════
+   Blue felt table under a crimson/purple gothic arch, black-tie dealer,
+   Didot/Bodoni display type, antique gold + crimson accents. */
+html[data-theme="dead-again"] {
+  --felt-0: #07060d; --felt-1: #1a0b22;
+  --gold: #d8bd73; --gold-2: #f3e3b0; --gold-dim: #8c6f2a;
+  --cream: #efe6d6; --teal: #7fd3ff; --red: #b3122f;
+  --serif: Didot, "Bodoni 72", "Bodoni MT", "Playfair Display", Georgia, serif;
+}
+html[data-theme="dead-again"] body {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(140,18,48,.75), transparent 60%),
+    radial-gradient(90% 50% at 50% 0%, rgba(74,24,110,.6), transparent 70%),
+    radial-gradient(ellipse 85% 42% at 50% 64%, #1d4f8f 0%, #123563 45%, rgba(10,25,52,.0) 75%),
+    linear-gradient(180deg, #1a0b22 0%, #0b0a18 55%, #050409 100%);
+}
+html[data-theme="dead-again"] body::before {
+  opacity: 1;
+  background:
+    /* gothic arch frame (pointed arch, crimson stroke) */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844' preserveAspectRatio='none'%3E%3Cpath d='M14 844 V300 Q14 120 195 22 Q376 120 376 300 V844' fill='none' stroke='%23a3163a' stroke-opacity='.55' stroke-width='3'/%3E%3Cpath d='M26 844 V306 Q26 134 195 40 Q364 134 364 306 V844' fill='none' stroke='%23d8bd73' stroke-opacity='.28' stroke-width='1'/%3E%3C/svg%3E") center/100% 100% no-repeat,
+    radial-gradient(ellipse at 50% 120%, rgba(0,0,0,.6), transparent 60%);
+}
+html[data-theme="dead-again"] h1 {
+  font-weight: 400; letter-spacing: .08em; color: #f3e3b0;
+  text-shadow: 0 0 18px rgba(163,22,58,.7), 0 2px 0 #5a0f22;
+}
+html[data-theme="dead-again"] .subtitle { color: #c9a9b5; letter-spacing: .4em; }
+html[data-theme="dead-again"] .suits-row { color: #d8bd73; }
+html[data-theme="dead-again"] .suits-row .red { color: #c21b45; }
+html[data-theme="dead-again"] .panel {
+  background: linear-gradient(180deg, rgba(26,11,34,.85), rgba(14,10,30,.8));
+  border-color: rgba(216,189,115,.35);
+  border-radius: 120px 120px 14px 14px / 40px 40px 14px 14px;   /* arched top */
+}
+html[data-theme="dead-again"] .btn {
+  background: linear-gradient(180deg, #c21b45, #8a0f2c 60%, #5e0a1d);
+  color: #f3e3b0; box-shadow: 0 5px 0 #3a0612, 0 0 0 1px #d8bd73 inset, 0 12px 26px rgba(0,0,0,.45);
+  border-radius: 999px;
+}
+html[data-theme="dead-again"] .btn:active { box-shadow: 0 2px 0 #3a0612, 0 0 0 1px #d8bd73 inset; }
+html[data-theme="dead-again"] .btn.secondary { background: transparent; color: #d8bd73; border: 1px solid rgba(216,189,115,.5); box-shadow: none; }
+html[data-theme="dead-again"] .diff-btn { background: rgba(14,10,30,.7); border-color: rgba(216,189,115,.3); }
+html[data-theme="dead-again"] .diff-btn.selected { background: linear-gradient(180deg, #1d4f8f, #123563); color: #f3e3b0; border-color: #d8bd73; box-shadow: 0 0 14px rgba(29,79,143,.6); }
+html[data-theme="dead-again"] .time-custom { background: rgba(14,10,30,.75); }
+html[data-theme="dead-again"] .card-face.front {
+  background: linear-gradient(180deg, #fbf7ee, #efe7d6);
+  border: 1px solid #b89a52; box-shadow: 0 6px 16px rgba(0,0,0,.5), inset 0 0 0 2px #fbf7ee, inset 0 0 0 3px rgba(184,154,82,.55);
+}
+html[data-theme="dead-again"] .card-face.back {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 70'%3E%3Cpath d='M9 64 V30 Q9 14 25 6 Q41 14 41 30 V64 Z' fill='none' stroke='%23d8bd73' stroke-width='1.4'/%3E%3Cpath d='M14 64 V32 Q14 19 25 12 Q36 19 36 32 V64' fill='none' stroke='%23d8bd73' stroke-opacity='.5' stroke-width='.8'/%3E%3Ccircle cx='25' cy='36' r='4' fill='none' stroke='%23d8bd73' stroke-width='1'/%3E%3C/svg%3E") center/86% 86% no-repeat,
+    repeating-linear-gradient(135deg, rgba(0,0,0,.18) 0 2px, transparent 2px 6px),
+    linear-gradient(170deg, #8a0f2c, #4a0a2e 55%, #2a0f3d);
+  border: 1px solid #d8bd73;
+}
+html[data-theme="dead-again"] .card-face.back::after { content: ""; }
+html[data-theme="dead-again"] .dealer-slot { border-color: rgba(216,189,115,.4); background: rgba(18,53,99,.35); }
+html[data-theme="dead-again"] .dealer-label { color: #d8bd73; letter-spacing: .4em; }
+html[data-theme="dead-again"] .round-chip, html[data-theme="dead-again"] .score-chip { background: rgba(26,11,34,.7); border-color: rgba(216,189,115,.35); }
+html[data-theme="dead-again"] .timer-fill { background: linear-gradient(90deg, #d8bd73, #c21b45); }
+html[data-theme="dead-again"] #result { background: linear-gradient(180deg, rgba(20,9,28,.96), rgba(8,8,22,.97)); border-color: rgba(216,189,115,.4); }
+html[data-theme="dead-again"] .card-inner { transition-duration: .7s; transition-timing-function: cubic-bezier(.3,1.3,.5,1); }
+html[data-theme="dead-again"] .theme-btn.selected { color: #f3e3b0; }
+
+/* ══════════ THEME 2 · NEON MASK (the masked host as your dealer) ══════════
+   Pitch-black bunker, hooded dealer with a glowing crooked-smile mask,
+   neon red + cyan, monospace HUD type, scanline card backs. */
+html[data-theme="neon"] {
+  --felt-0: #000; --felt-1: #050507;
+  --gold: #ff2e4d; --gold-2: #ff8597; --gold-dim: #7a0f1f;
+  --cream: #dfe8ef; --teal: #27f0ff; --red: #e0123a;
+  --serif: "Avenir Next Condensed", "Futura", "Arial Narrow", sans-serif;
+  --sans: Menlo, "SF Mono", ui-monospace, Consolas, monospace;
+}
+html[data-theme="neon"] body {
+  background:
+    radial-gradient(60% 30% at 15% 12%, rgba(255,46,77,.22), transparent 70%),
+    radial-gradient(60% 30% at 90% 85%, rgba(39,240,255,.14), transparent 70%),
+    linear-gradient(180deg, #050507, #000);
+}
+html[data-theme="neon"] body::before {
+  opacity: 1;
+  background:
+    linear-gradient(rgba(39,240,255,.05) 1px, transparent 1px) 0 0/100% 28px,
+    linear-gradient(90deg, rgba(39,240,255,.05) 1px, transparent 1px) 0 0/28px 100%,
+    radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.85));
+}
+html[data-theme="neon"] h1 {
+  font-weight: 700; letter-spacing: .12em; color: #fff;
+  text-shadow: 0 0 4px #fff, 0 0 12px #ff2e4d, 0 0 28px #ff2e4d, 0 0 46px rgba(255,46,77,.6);
+  animation: neonFlicker 5s infinite;
+}
+@keyframes neonFlicker { 0%,92%,96%,100% { opacity: 1; } 93%,95% { opacity: .55; } }
+html[data-theme="neon"] .subtitle { color: #27f0ff; text-shadow: 0 0 8px rgba(39,240,255,.7); }
+html[data-theme="neon"] .suits-row { color: #27f0ff; text-shadow: 0 0 8px #27f0ff; }
+html[data-theme="neon"] .suits-row .red { color: #ff2e4d; text-shadow: 0 0 8px #ff2e4d; }
+html[data-theme="neon"] .panel { background: rgba(5,5,8,.85); border: 1px solid rgba(39,240,255,.35); border-radius: 4px; box-shadow: 0 0 22px rgba(39,240,255,.08) inset; }
+html[data-theme="neon"] .panel h2 { color: #27f0ff; }
+html[data-theme="neon"] .panel ol { font-size: 12.5px; }
+html[data-theme="neon"] .btn {
+  background: transparent; color: #fff; border: 2px solid #ff2e4d; border-radius: 4px;
+  text-shadow: 0 0 8px #ff2e4d; box-shadow: 0 0 14px rgba(255,46,77,.6), inset 0 0 14px rgba(255,46,77,.35);
+  font-family: var(--sans); letter-spacing: .3em;
+}
+html[data-theme="neon"] .btn:active { box-shadow: 0 0 24px rgba(255,46,77,.9), inset 0 0 22px rgba(255,46,77,.6); transform: none; }
+html[data-theme="neon"] .btn:disabled { opacity: .45; filter: none; box-shadow: none; }
+html[data-theme="neon"] .btn.secondary { border-color: #27f0ff; text-shadow: 0 0 8px #27f0ff; box-shadow: 0 0 10px rgba(39,240,255,.35); }
+html[data-theme="neon"] .diff-btn { border-radius: 4px; background: rgba(0,0,0,.6); border-color: rgba(39,240,255,.35); }
+html[data-theme="neon"] .diff-btn.selected { background: rgba(255,46,77,.12); color: #fff; border-color: #ff2e4d; box-shadow: 0 0 12px rgba(255,46,77,.6); }
+html[data-theme="neon"] .time-custom { border-radius: 4px; background: rgba(0,0,0,.6); border-color: rgba(39,240,255,.3); }
+html[data-theme="neon"] .step-btn { border-color: #27f0ff; color: #27f0ff; background: transparent; box-shadow: 0 0 10px rgba(39,240,255,.4); }
+html[data-theme="neon"] .card-face { border-radius: 5px; }
+html[data-theme="neon"] .card-face.front {
+  background: linear-gradient(180deg, #f4f6f8, #dde3e8);
+  border: 1px solid #27f0ff; box-shadow: 0 0 8px rgba(39,240,255,.45), 0 6px 14px rgba(0,0,0,.6);
+}
+html[data-theme="neon"] .corner { font-family: "Avenir Next Condensed", Futura, sans-serif; }
+html[data-theme="neon"] .card-face.back {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 70'%3E%3Cpath d='M15 30 l7 2 M35 30 l-7 2' stroke='%2327f0ff' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M14 42 Q22 50 30 45 Q34 43 37 38' fill='none' stroke='%23ff2e4d' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/80% 80% no-repeat,
+    repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 3px),
+    linear-gradient(160deg, #0b0b10, #000);
+  border: 1px solid #ff2e4d; box-shadow: 0 0 10px rgba(255,46,77,.5);
+}
+html[data-theme="neon"] .card-face.back::after { content: ""; }
+html[data-theme="neon"] .card.face-down .card-face.back { animation: backPulse 2.4s ease-in-out infinite; }
+@keyframes backPulse { 0%,100% { box-shadow: 0 0 6px rgba(255,46,77,.4); } 50% { box-shadow: 0 0 14px rgba(255,46,77,.8); } }
+html[data-theme="neon"] .card-inner { transition: transform .45s cubic-bezier(.7,0,.3,1); }
+html[data-theme="neon"] .card.selected { filter: drop-shadow(0 0 8px #ff2e4d); }
+html[data-theme="neon"] .card.selected::after { background: #ff2e4d; color: #fff; }
+html[data-theme="neon"] .dealer-slot { border: 1px dashed rgba(39,240,255,.5); background: rgba(39,240,255,.04); border-radius: 5px; }
+html[data-theme="neon"] .dealer-label { color: #27f0ff; text-shadow: 0 0 6px #27f0ff; }
+html[data-theme="neon"] .round-chip, html[data-theme="neon"] .score-chip { border-radius: 3px; background: #000; border-color: rgba(39,240,255,.45); }
+html[data-theme="neon"] .brand-mini { color: #ff2e4d; text-shadow: 0 0 8px #ff2e4d; }
+html[data-theme="neon"] .status { color: #27f0ff; font-family: var(--sans); font-size: 12px; text-transform: uppercase; letter-spacing: .12em; }
+html[data-theme="neon"] .timer-track { border-radius: 0; border-color: rgba(255,46,77,.4); }
+html[data-theme="neon"] .timer-fill { border-radius: 0; background: #ff2e4d; box-shadow: 0 0 10px #ff2e4d; }
+html[data-theme="neon"] #result { border-radius: 4px; background: rgba(0,0,0,.94); border-color: rgba(39,240,255,.4); }
+html[data-theme="neon"] .theme-btn { border-radius: 4px; }
+html[data-theme="neon"] .theme-btn.selected { color: #ff2e4d; }
+html[data-theme="neon"] .dealer-figure .mask-glow { animation: maskGlow 3s ease-in-out infinite; }
+html[data-theme="neon"] .dealer-figure.dealing .mask-glow { animation: maskGlow .3s ease-in-out 4; }
+@keyframes maskGlow { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+
+/* ══════════ THEME 3 · DEALER ROOM (bold minimal) ══════════
+   Stark paper-white room, heavy black condensed type, one blood-red accent,
+   pictogram dealer, square-cut cards. */
+html[data-theme="dealer-room"] {
+  --felt-0: #eceae4; --felt-1: #f4f2ed;
+  --gold: #d0021b; --gold-2: #111; --gold-dim: #111;
+  --cream: #111; --teal: #0a7cff; --red: #d0021b; --black: #111;
+  --serif: "Helvetica Neue", "Avenir Next", Arial, sans-serif;
+}
+html[data-theme="dealer-room"] body { background: linear-gradient(180deg, #f4f2ed, #e4e1da); color: #111; }
+html[data-theme="dealer-room"] body::before {
+  opacity: 1;
+  background:
+    linear-gradient(90deg, transparent calc(50% - .5px), rgba(0,0,0,.06) calc(50% - .5px) calc(50% + .5px), transparent calc(50% + .5px)),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.025) 0 1px, transparent 1px 64px);
+}
+html[data-theme="dealer-room"] h1 {
+  font-weight: 900; font-stretch: condensed; letter-spacing: -.02em; color: #111; text-shadow: none;
+  font-size: clamp(54px, 17vw, 72px); text-transform: uppercase;
+}
+html[data-theme="dealer-room"] .subtitle { color: #d0021b; font-weight: 700; letter-spacing: .5em; }
+html[data-theme="dealer-room"] .suits-row { color: #111; }
+html[data-theme="dealer-room"] .suits-row .red { color: #d0021b; }
+html[data-theme="dealer-room"] .panel { background: #fff; border: 2px solid #111; border-radius: 0; box-shadow: 6px 6px 0 #111; }
+html[data-theme="dealer-room"] .panel h2 { color: #d0021b; font-weight: 900; }
+html[data-theme="dealer-room"] .panel ol { color: #111; }
+html[data-theme="dealer-room"] .diff-label, html[data-theme="dealer-room"] .best-line { color: #444; }
+html[data-theme="dealer-room"] .best-line strong { color: #111; }
+html[data-theme="dealer-room"] .btn {
+  background: #111; color: #fff; border-radius: 0; box-shadow: 5px 5px 0 #d0021b; font-weight: 900; letter-spacing: .2em;
+}
+html[data-theme="dealer-room"] .btn:active { transform: translate(3px,3px); box-shadow: 2px 2px 0 #d0021b; }
+html[data-theme="dealer-room"] .btn:disabled { background: #888; box-shadow: none; filter: none; }
+html[data-theme="dealer-room"] .btn.secondary { background: transparent; color: #111; border: 2px solid #111; box-shadow: none; }
+html[data-theme="dealer-room"] .diff-btn { background: #fff; color: #111; border: 2px solid #111; border-radius: 0; }
+html[data-theme="dealer-room"] .diff-btn.selected { background: #d0021b; color: #fff; border-color: #d0021b; box-shadow: none; }
+html[data-theme="dealer-room"] .time-custom { background: #fff; border: 2px solid #111; border-radius: 0; }
+html[data-theme="dealer-room"] .time-value { color: #111; font-weight: 900; }
+html[data-theme="dealer-room"] .time-value small, html[data-theme="dealer-room"] .time-scale { color: #555; }
+html[data-theme="dealer-room"] .step-btn { border-radius: 0; border: 2px solid #111; background: #fff; color: #111; }
+html[data-theme="dealer-room"] input.time-slider::-webkit-slider-runnable-track { background: linear-gradient(90deg, #d0021b 0 var(--fill, 50%), #ddd var(--fill, 50%) 100%); border: 0; border-radius: 0; }
+html[data-theme="dealer-room"] input.time-slider::-webkit-slider-thumb { border-radius: 0; background: #111; border: 0; }
+html[data-theme="dealer-room"] .card-face { border-radius: 3px; }
+html[data-theme="dealer-room"] .card-face.front { background: #fff; border: 2px solid #111; box-shadow: 3px 3px 0 rgba(0,0,0,.85); padding: 5% 7%; }
+html[data-theme="dealer-room"] .corner { font-family: "Helvetica Neue", Arial, sans-serif; font-weight: 900; }
+html[data-theme="dealer-room"] .card-face.back {
+  background: #111; border: 2px solid #111; box-shadow: 3px 3px 0 #d0021b;
+}
+html[data-theme="dealer-room"] .card-face.back::after {
+  content: "16"; color: #d0021b; font-family: "Helvetica Neue", Arial, sans-serif; font-weight: 900; font-size: 34cqh; letter-spacing: -.04em; text-shadow: none; opacity: 1;
+}
+html[data-theme="dealer-room"] .card-inner { transition: transform .32s cubic-bezier(.6,0,.2,1); }
+html[data-theme="dealer-room"] .card.selected { filter: none; outline: 3px solid #d0021b; outline-offset: 2px; }
+html[data-theme="dealer-room"] .card.selected::after { background: #d0021b; color: #fff; border-radius: 0; }
+html[data-theme="dealer-room"] .dealer-slot { border: 2px dashed #999; border-radius: 3px; background: transparent; }
+html[data-theme="dealer-room"] .dealer-label { color: #111; font-weight: 900; }
+html[data-theme="dealer-room"] .round-chip, html[data-theme="dealer-room"] .score-chip { background: #111; color: #fff; border-radius: 0; border: 0; }
+html[data-theme="dealer-room"] .score-chip strong { color: #fff; }
+html[data-theme="dealer-room"] .brand-mini { color: #111; font-weight: 900; }
+html[data-theme="dealer-room"] .status { color: #d0021b; font-weight: 700; }
+html[data-theme="dealer-room"] .timer-track { border-radius: 0; background: #ddd; border: 0; }
+html[data-theme="dealer-room"] .timer-fill, html[data-theme="dealer-room"] .timer-fill.warn, html[data-theme="dealer-room"] .timer-fill.danger { border-radius: 0; background: #111; }
+html[data-theme="dealer-room"] .timer-fill.danger { background: #d0021b; }
+html[data-theme="dealer-room"] #result { background: #fff; border: 2px solid #111; border-radius: 0; box-shadow: 6px 6px 0 #111; color: #111; }
+html[data-theme="dealer-room"] .rank-row { color: #333; }
+html[data-theme="dealer-room"] .rank-row .place, html[data-theme="dealer-room"] .rank-row .cards, html[data-theme="dealer-room"] .rank-row .pts, html[data-theme="dealer-room"] .round-total { color: #555; }
+html[data-theme="dealer-room"] .rank-row.you { background: rgba(208,2,27,.08); box-shadow: inset 0 0 0 2px #d0021b; }
+html[data-theme="dealer-room"] .rank-row.you .desc, html[data-theme="dealer-room"] .rank-row.you .pts { color: #d0021b; }
+html[data-theme="dealer-room"] .sum-row { border-color: #ccc; }
+html[data-theme="dealer-room"] .sum-row .rn, html[data-theme="dealer-room"] .grand { color: #555; }
+html[data-theme="dealer-room"] .grand .num { color: #111; font-weight: 900; }
+html[data-theme="dealer-room"] .theme-btn { border-radius: 0; border: 2px solid #111; background: #fff; }
+html[data-theme="dealer-room"] .theme-btn.selected { background: #111; color: #fff; }
+html[data-theme="dealer-room"] .time-label, html[data-theme="dealer-room"] .you-line { color: #111; }
+
+/* fixes */
+.theme-label { margin-top: 14px; }
+html:not([data-theme="classic"]) .dealer-slot.filled { border-color: transparent; background: transparent; }
+html[data-theme="dealer-room"] .rank-row .cards .red { color: #d0021b; }
+
+/* ══════════ Generated artwork layer (original AI-generated images, no likenesses/logos) ══════════ */
+.dealer-figure { width: 76px; height: 92px; top: -2px; }
+.dealer-photo {
+  width: 100%; height: 100%;
+  background: #000 center/cover no-repeat;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.dealer-figure.dealing .dealer-photo { animation: dealerPulse .45s ease-in-out 3; }
+@keyframes dealerPulse { 0%,100% { transform: none; } 50% { transform: scale(1.05); } }
+
+/* Theme 1 · Dead Again */
+html[data-theme="dead-again"] body {
+  background:
+    linear-gradient(180deg, rgba(8,4,14,.25) 0%, rgba(8,4,14,.12) 35%, rgba(5,4,12,.5) 70%, rgba(3,3,8,.85) 100%),
+    url("{{ASSETS}}t1-bg.webp") center 30%/cover no-repeat,
+    #07060d;
+}
+html[data-theme="dead-again"] body::before {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844' preserveAspectRatio='none'%3E%3Cpath d='M14 844 V300 Q14 120 195 22 Q376 120 376 300 V844' fill='none' stroke='%23d8bd73' stroke-opacity='.22' stroke-width='1'/%3E%3C/svg%3E") center/100% 100% no-repeat,
+    radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0,0,0,.55));
+}
+html[data-theme="dead-again"] .dealer-photo {
+  background-image: url("{{ASSETS}}t1-dealer.webp");
+  border-radius: 38px 38px 6px 6px;              /* gothic arch window */
+  border: 1.5px solid #d8bd73;
+  box-shadow: 0 0 0 3px rgba(26,11,34,.9), 0 0 18px rgba(163,22,58,.55);
+}
+html[data-theme="dead-again"] .dealer-figure.dealing .dealer-photo { box-shadow: 0 0 0 3px rgba(26,11,34,.9), 0 0 28px rgba(194,27,69,.95); }
+html[data-theme="dead-again"] .card-face.back {
+  background: url("{{ASSETS}}t1-cardback.webp") center/cover no-repeat, #4a0a2e;
+  border: 1px solid #d8bd73;
+}
+html[data-theme="dead-again"] .panel { background: linear-gradient(180deg, rgba(20,8,28,.7), rgba(10,8,24,.72)); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+
+/* Theme 2 · Neon Mask */
+html[data-theme="neon"] body {
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.5) 0%, rgba(0,0,0,.35) 40%, rgba(0,0,0,.75) 75%, #000 100%),
+    url("{{ASSETS}}t2-bg.webp") center 35%/cover no-repeat,
+    #000;
+}
+html[data-theme="neon"] body::before {
+  background:
+    linear-gradient(rgba(39,240,255,.035) 1px, transparent 1px) 0 0/100% 28px,
+    radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.8));
+}
+html[data-theme="neon"] .dealer-photo {
+  background-image: url("{{ASSETS}}t2-dealer.webp");
+  width: 80px; height: 80px; margin-top: 4px;
+  border-radius: 50%;
+  border: 1.5px solid #27f0ff;
+  box-shadow: 0 0 10px rgba(39,240,255,.55), 0 0 22px rgba(255,46,77,.35);
+}
+html[data-theme="neon"] .dealer-figure.dealing .dealer-photo { box-shadow: 0 0 16px rgba(255,46,77,.95), 0 0 30px rgba(255,46,77,.6); border-color: #ff2e4d; }
+html[data-theme="neon"] .card-face.back {
+  background: url("{{ASSETS}}t2-cardback.webp") center/cover no-repeat, #050507;
+  border: 0; box-shadow: 0 0 10px rgba(255,46,77,.45);
+}
+html[data-theme="neon"] .panel { background: rgba(3,3,6,.82); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+
+/* Theme 3 · Dealer Room */
+html[data-theme="dealer-room"] body {
+  background:
+    linear-gradient(180deg, rgba(244,242,237,.35) 0%, rgba(244,242,237,.55) 45%, rgba(236,234,228,.85) 75%, #e8e5de 100%),
+    url("{{ASSETS}}t3-bg.webp") center 30%/cover no-repeat,
+    #eceae4;
+}
+html[data-theme="dealer-room"] body::before { background: none; }
+html[data-theme="dealer-room"] .dealer-photo {
+  background-image: url("{{ASSETS}}t3-dealer.webp");
+  border: 2px solid #111;
+  box-shadow: 4px 4px 0 #d0021b;
+  filter: grayscale(.15) contrast(1.05);
+}
+html[data-theme="dealer-room"] .dealer-figure.dealing .dealer-photo { box-shadow: 6px 6px 0 #d0021b; }
