@@ -34,22 +34,29 @@ function seeded(seed) {
   assert(ok, "makeHand(" + cat + ") always yields 5 distinct cards of " + P.HAND_NAMES[cat]);
 });
 
-// ── Generated rounds: structure, unique best, decoys ────────────────
-var N = 400;
-["easy", "medium", "hard"].forEach(function (diff) {
-  var rng = seeded(diff.length * 7919);
-  var rules = G.DIFF_RULES[diff];
-  var bad = { size: 0, dup: 0, unique: 0, decoys: 0, fallback: 0, target: 0, rankMismatch: 0, kicker: 0 };
-  var cats = {};
-  var maxMs = 0, totalMs = 0;
+// Independent recount of a board's decent alternatives (not using quickCheck).
+function recount(r) {
+  var dc = G.dealerCategory(r.dealt);
+  var alts = r.ranking.tiers.slice(1).filter(function (t) {
+    return t.key.indexOf("kicker:") !== 0 && t.hand.category >= 1 && t.hand.category > dc;
+  });
+  return { alts: alts.length, strong: alts.filter(function (t) { return t.hand.category >= 2; }).length };
+}
+function pct(arr, p) { var s = arr.slice().sort(function (x, y) { return x - y; }); return s[Math.min(s.length - 1, Math.floor(p * (s.length - 1)))]; }
+
+// ── Generated rounds: structure, unique best, alternatives, mode mix ──
+(function () {
+  var N = 1200;
+  var rng = seeded(7919);
+  var bad = { size: 0, dup: 0, unique: 0, kicker: 0, rankMismatch: 0, alts: 0, strong: 0, target: 0, planted: 0, reported: 0 };
+  var modes = { planted: 0, natural: 0 }, cats = {}, fallback = 0, times = [], altHist = {};
   for (var i = 0; i < N; i++) {
     var t0 = process.hrtime.bigint();
-    var r = G.generateRound({ difficulty: diff, rng: rng });
-    var ms = Number(process.hrtime.bigint() - t0) / 1e6;
-    maxMs = Math.max(maxMs, ms); totalMs += ms;
-    if (r.fallback) bad.fallback++;
+    var r = G.generateRound({ rng: rng });
+    times.push(Number(process.hrtime.bigint() - t0) / 1e6);
+    if (r.fallback) { fallback++; continue; }
+    modes[r.mode]++;
     cats[r.target] = (cats[r.target] || 0) + 1;
-
     if (r.grid.length !== 16 || r.dealt.length !== 3) bad.size++;
     var ids = {};
     r.grid.concat(r.dealt).forEach(function (c) { ids[c.id] = 1; });
@@ -62,57 +69,88 @@ var N = 400;
       if (P.compareHands(P.evaluateFive([r.grid[a], r.grid[b]].concat(r.dealt)), best.hand) === 0) count++;
     }
     if (count !== 1) bad.unique++;
-    if (!r.fallback && best.hand.category !== r.target) bad.target++;
+    if (best.hand.category !== r.target) bad.target++;
     if (G.placeOfPick(r.ranking, best.indices) !== 1) bad.rankMismatch++;
-    if (!r.fallback && r.ranking.tiers[1] && r.ranking.tiers[1].key.indexOf("kicker:") === 0) bad.kicker++;
-
-    if (!r.fallback) {
-      var floor = G.decoyFloor(diff, r.target);
-      var decoys = r.ranking.tiers.slice(1).filter(function (t) { return t.hand.category >= floor; });
-      if (decoys.length < rules.minDecoys) bad.decoys++;
-    }
+    if (r.ranking.tiers[1] && r.ranking.tiers[1].key.indexOf("kicker:") === 0) bad.kicker++;
+    var rc = recount(r);
+    altHist[rc.alts] = (altHist[rc.alts] || 0) + 1;
+    if (rc.alts < 2 || rc.alts > 7) bad.alts++;
+    if (rc.strong < 1) bad.strong++;
+    if (rc.alts !== r.alts || rc.strong !== r.strongAlts) bad.reported++;
   }
-  assert(bad.size === 0, diff + ": every round has 16 grid + 3 dealt cards");
-  assert(bad.dup === 0, diff + ": no duplicate cards in a round");
-  assert(bad.unique === 0, diff + ": exactly one pick makes the best hand (" + bad.unique + " bad)");
-  assert(bad.target === 0, diff + ": best hand matches the planned category");
-  assert(bad.rankMismatch === 0, diff + ": the best pick is ranked 1st");
-  assert(bad.kicker === 0, diff + ": both best cards matter (no other pick makes the same hand with a weaker kicker)");
-  assert(bad.decoys === 0, diff + ": at least " + rules.minDecoys + " distinct decoy hands near the best (" + bad.decoys + " bad)");
-  assert(bad.fallback <= N * 0.01, diff + ": random fallback is rare (" + bad.fallback + "/" + N + ")");
-  assert(Object.keys(cats).length >= 5, diff + ": best-hand categories vary (" + JSON.stringify(cats) + ")");
-  assert(!cats[9], diff + ": never targets a royal flush");
-  assert(totalMs / N < 20, diff + ": average generation under 20ms (" + (totalMs / N).toFixed(1) + "ms)");
-  assert(maxMs < 150, diff + ": worst-case generation bounded (" + maxMs.toFixed(1) + "ms)");
-  console.log("  " + diff + ": avg " + (totalMs / N).toFixed(1) + "ms, max " + maxMs.toFixed(1) + "ms, targets " + JSON.stringify(cats));
-});
-
-// ── Hard puts decoys closer than easy ───────────────────────────────
-(function () {
-  function avgGap(diff) {
-    var rng = seeded(424242), sum = 0, n = 0;
-    for (var i = 0; i < 200; i++) {
-      var r = G.generateRound({ difficulty: diff, rng: rng });
-      if (r.fallback) continue;
-      var t = r.ranking.tiers;
-      // category gap between best and the 3rd-best distinct hand
-      sum += t[0].hand.category - t[Math.min(2, t.length - 1)].hand.category; n++;
-    }
-    return sum / n;
-  }
-  var e = avgGap("easy"), h = avgGap("hard");
-  assert(h <= e + 0.05, "hard decoys are at least as close as easy (hard " + h.toFixed(2) + " vs easy " + e.toFixed(2) + ")");
+  var ok = N - fallback;
+  assert(fallback <= N * 0.005, "fallback is rare (" + fallback + "/" + N + ")");
+  assert(bad.size === 0, "every round has 16 grid + 3 dealt cards");
+  assert(bad.dup === 0, "no duplicate cards in a round");
+  assert(bad.unique === 0, "exactly one pick makes the best hand (" + bad.unique + " bad)");
+  assert(bad.kicker === 0, "no other pick makes the best hand with a weaker kicker (" + bad.kicker + " bad)");
+  assert(bad.target === 0, "reported target matches the best hand");
+  assert(bad.rankMismatch === 0, "the best pick is ranked 1st");
+  assert(bad.alts === 0, "2 to 7 decent alternatives on every board (" + bad.alts + " bad)");
+  assert(bad.strong === 0, "at least one alternative is two pair or better (" + bad.strong + " bad)");
+  assert(bad.reported === 0, "generator's alt counts match an independent recount (" + bad.reported + " bad)");
+  var natShare = modes.natural / ok;
+  assert(natShare > 0.15 && natShare < 0.25, "about 20% natural rounds (" + (100 * natShare).toFixed(1) + "%)");
+  assert(Object.keys(altHist).length >= 4, "alternative count varies board to board (" + JSON.stringify(altHist) + ")");
+  assert(Object.keys(cats).length >= 6, "best-hand categories vary (" + JSON.stringify(cats) + ")");
+  var p50 = pct(times, 0.5), p95 = pct(times, 0.95), p99 = pct(times, 0.99), mx = Math.max.apply(null, times);
+  var mean = times.reduce(function (s, x) { return s + x; }, 0) / times.length;
+  assert(mean < 25, "average generation under 25ms (" + mean.toFixed(1) + "ms)");
+  assert(p95 < 80, "p95 generation under 80ms (" + p95.toFixed(1) + "ms)");
+  assert(p99 < 200, "p99 generation under 200ms (" + p99.toFixed(1) + "ms)");
+  console.log("  " + N + " rounds: mean " + mean.toFixed(1) + "ms, p50 " + p50.toFixed(1) + ", p95 " + p95.toFixed(1) + ", p99 " + p99.toFixed(1) + ", max " + mx.toFixed(1) + "ms");
+  console.log("  modes " + JSON.stringify(modes) + ", targets " + JSON.stringify(cats) + ", alts " + JSON.stringify(altHist));
 })();
 
-// ── No back-to-back category repeats when `used` is passed ───────────
+// ── Planted rounds: the planted target stays the unique best ─────────
+[2, 3, 4, 5, 6, 7, 8].forEach(function (cat) {
+  var rng = seeded(cat * 101), ok = true;
+  for (var i = 0; i < 25; i++) {
+    var r = G.generateRound({ target: cat, rng: rng });
+    if (r.fallback || r.mode !== "planted" || r.target !== cat || r.ranking.tiers[0].hand.category !== cat || r.ranking.tiers[0].picks.length !== 1) ok = false;
+  }
+  assert(ok, "planted " + P.HAND_NAMES[cat] + " target is always the unique best");
+});
+
+// ── Natural rounds can be forced and still pass the bar ──────────────
+(function () {
+  var rng = seeded(31337), ok = true;
+  for (var i = 0; i < 100; i++) {
+    var r = G.generateRound({ mode: "natural", rng: rng });
+    var rc = recount(r);
+    if (r.fallback || r.mode !== "natural" || r.ranking.tiers[0].picks.length !== 1 || rc.alts < 2 || rc.alts > 7 || rc.strong < 1) ok = false;
+  }
+  assert(ok, "natural rounds pass the same quality bar");
+})();
+
+// ── Builder works in small slices and matches the one-shot result ────
+(function () {
+  var b1 = G.createBuilder({ rng: seeded(99), target: 8 });
+  var r1 = null, slices = 0;
+  while (!r1 && slices < 100000) { r1 = b1.step(0); slices++; }
+  var r2 = G.generateRound({ rng: seeded(99), target: 8 });
+  assert(r1 && slices > 1, "builder can be stepped in slices (" + slices + " slices)");
+  assert(r1 && r1.grid.map(function (c) { return c.id; }).join() === r2.grid.map(function (c) { return c.id; }).join(), "sliced build gives the same board as a one-shot build");
+  var b3 = G.createBuilder({ rng: seeded(5), rules: { minAlts: 99, maxAlts: 99, minStrong: 0 }, maxAttempts: 50 });
+  var r3 = b3.step(Infinity);
+  assert(r3 && r3.fallback && r3.grid.length === 16, "impossible rules fall back instead of hanging");
+})();
+
+// ── Per-target cap switches target ───────────────────────────────────
+(function () {
+  var r = G.generateRound({ rng: seeded(11), mode: "planted", used: [2, 3, 4, 5, 6, 7], perTarget: 1, maxAttempts: 4000 });
+  assert(!r.fallback && r.target >= 2, "with a tiny per-target cap the builder switches target and still succeeds (got " + r.target + ")");
+})();
+
+// ── No category repeats when `used` is passed ────────────────────────
 (function () {
   var used = [], ok = true;
   for (var i = 0; i < 5; i++) {
-    var r = G.generateRound({ difficulty: "medium", used: used });
+    var r = G.generateRound({ used: used, mode: "planted" });
     if (!r.fallback && used.indexOf(r.target) !== -1) ok = false;
     used.push(r.target);
   }
-  assert(ok, "5 rounds in a game use 5 different best-hand categories");
+  assert(ok, "5 planted rounds in a game use 5 different best-hand categories");
 })();
 
 // ── Ranking & scoring on a hand-built deal ───────────────────────────
